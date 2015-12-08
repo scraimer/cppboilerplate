@@ -1,0 +1,18 @@
+.DEFAULT: all
+.PHONY: all
+all:
+
+CXX=clang++
+
+LDFLAGS=
+LDLIBS=-lpthread -lstdc++ -lrt -ldl
+
+CXXFLAGS += --std=c++11
+CXXFLAGS += \
+				-Weverything \
+				-Wno-reserved-id-macro \
+				-Wno-c++98-compat \
+				-Wno-padded \
+
+CPPFLAGS =
+
