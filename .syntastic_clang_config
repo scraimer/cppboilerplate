@@ -1,5 +1,0 @@
---std=c++11
--Weverything
--Wno-reserved-id-macro
--Wno-c++98-compat 
-

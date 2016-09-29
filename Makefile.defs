@@ -1,3 +1,8 @@
+# Enable/disable debug information
+debug_symbols=1
+# Enable/Disable clang's address sanitizer
+asan=1
+
 .DEFAULT: all
 .PHONY: all
 all:
@@ -13,6 +18,53 @@ CXXFLAGS += \
 				-Wno-reserved-id-macro \
 				-Wno-c++98-compat \
 				-Wno-padded \
+				-Wno-float-equal \
 
-CPPFLAGS =
+CXXDEP  = $(CXX) -MM -c $(CPPFLAGS) $(CXXFLAGS) $<
+CXXCOMP = $(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+LINK    = $(CXX) $(LDFLAGS) $(LDLIBS) $+ -o $@
 
+ifeq ($(debug_symbols),1)
+	CXXFLAGS += -g
+	LDFLAGS += -g
+endif
+
+ifeq ($(asan),1)
+	CXXFLAGS += -fsanitize=address
+	LDFLAGS += -fsanitize=address
+endif
+
+%.o : %.cpp
+	@echo Compiling $@
+	@$(CXXCOMP)
+
+# The following is based on http://scottmcpeak.com/autodepend/autodepend.html
+# just modified for the non-recursive multi-directory make
+# 
+# It generates the dependency information using $(CXX), and "fixes" it to use
+# the correct subdirectory for the dependency target. (In other words, g++
+# would generate a rule for "target.o: file1 file2" instead of
+# "lib_subdir/target.o: file1 file2")
+#
+# Detailed explanation from the webpage:
+#   sed:    strip the target (everything before colon)
+#   sed:    remove any continuation backslashes
+#   fmt -1: list words one per line
+#   sed:    strip leading spaces
+#   sed:    add trailing colons
+#
+# Also, all of this is run via "set -e" so that even a single error causes the
+# entire rule to stop and fail.
+%.o.d: %.cpp 
+	@echo Calculating dependencies for $<
+	@set -e; \
+		$(CXXDEP) $< > $@; \
+		mv -f $@ $@.tmp; \
+		sed -e 's|.*:|$(@D)/$*.o $@:|' < $@.tmp > $@; \
+		cp -f $@ $@.tmp; \
+		sed -e 's/.*://' -e 's/\\$$//' < $@.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $@; \
+		rm -f $@.tmp
+
+tags: *.cpp *.h
+	ctags -R --c++-kinds=+p --fields=+iaS --extra=+q $(find -name *.cpp ; find -name *.h)
+	

@@ -17,15 +17,15 @@ GMOCK_SRCS_ = $(GMOCK_DIR)/src/*.cc $(GMOCK_HEADERS)
 # conservative and not optimized.  This is fine as Google Test
 # compiles fast and for ordinary users its source rarely changes.
 gtest-all.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CPPFLAGS) -isystem $(GTEST_DIR) $(CXXFLAGS) -c \
             $(GTEST_DIR)/src/gtest-all.cc
 
 gmock-all.o : $(GMOCK_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GMOCK_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CPPFLAGS) -isystem $(GMOCK_DIR) $(CXXFLAGS) -c \
             $(GMOCK_DIR)/src/gmock-all.cc
 
 gtest_main.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+	$(CXX) $(CPPFLAGS) -isystem $(GTEST_DIR) $(CXXFLAGS) -c \
             $(GTEST_DIR)/src/gtest_main.cc
 
 gtest.a : gtest-all.o
@@ -34,7 +34,7 @@ gtest.a : gtest-all.o
 gtest_main.a : gtest-all.o gmock-all.o gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 	
-# The GTEST macros cause this warning to be thrown; I'm disabling it for now.
+# The GTEST macros cause these warnings to be thrown; I'm disabling them for now.
 CXXFLAGS += -Wno-global-constructors
 
 # A test should link with either gtest.a or gtest_main.a, depending on whether

@@ -14,9 +14,19 @@ raii_socket.cpp: raii_socket.h
 main.cpp: raii_socket.h
 
 OBJS = $(SRCS:%.cpp=%.o)
+DEPS = $(OBJS:%.o=%.o.d)
+TARGETS += $(DEPS) $(OBJS) 
 
-$(PRIMARY_TARGET): $(OBJS)
-	$(CXX) $(LDFLAGS) $(LDLIBS) $+ -o $@
+-include $(DEPS)
+
+$(PRIMARY_TARGET): $(OBJS) | $(DEPS) 
+	@echo Linking $@
+	@$(LINK)
+
+.PHONY: test
+test:
+	$(MAKE) -C test
+	test/all_tests
 
 .PHONY: clean
 clean:
