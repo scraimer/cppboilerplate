@@ -1,1 +1,12 @@
-.syntastic_clang_config
+-I .
+-I /usr/share/tradigo/clang-3.9/include/c++/v1/
+-I /home/shalom/Dropbox/dev/cpp11fun/env/gtest/googletest/include/
+-I /home/shalom/Dropbox/dev/cpp11fun/env/gtest/googlemock/include/
+--std=c++11
+-Weverything
+-Wno-reserved-id-macro
+-Wno-c++98-compat 
+-Wno-c++11-extensions
+-Wno-float-equal
+-Wno-unused-macros
+-Wno-global-constructors
