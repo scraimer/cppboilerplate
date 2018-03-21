@@ -1,5 +1,8 @@
 cmake_minimum_required (VERSION 3.2)
 
+# Options. Turn on with 'cmake -Dmyvarname=ON'.
+option(test "Build all tests." OFF) # Makes boolean 'test' available.
+
 project (cppboilerplate)
 
 #write_compiler_detection_header(
@@ -18,19 +21,46 @@ add_executable(main main.cpp)
 set_property(TARGET main PROPERTY CXX_STANDARD 14)
 target_link_libraries (main ${EXTRA_LIBS})
 
-include(CTest)
+if (test)
 
-# does the application run
-add_test (mainRuns main 25)
-# does it sqrt of 25
-add_test (mainComp25 main 25)
-set_tests_properties (mainComp25 PROPERTIES PASS_REGULAR_EXPRESSION "25 is 5")
-# does it handle negative numbers
-add_test (mainNegative main -25)
-set_tests_properties (mainNegative PROPERTIES PASS_REGULAR_EXPRESSION "-25 is 0")
-# does it handle small numbers
-add_test (mainSmall main 0.0001)
-set_tests_properties (mainSmall PROPERTIES PASS_REGULAR_EXPRESSION "0.0001 is 0.01")
-# does the usage message work?
-add_test (mainUsage main)
-set_tests_properties (mainUsage PROPERTIES PASS_REGULAR_EXPRESSION "Usage:.*number")
+	# Download and unpack googletest at configure time
+	configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+	execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  	  RESULT_VARIABLE result
+  	  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+	if(result)
+  	  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+	endif()
+	execute_process(COMMAND ${CMAKE_COMMAND} --build .
+  	  RESULT_VARIABLE result
+  	  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+	if(result)
+  	  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+	endif()
+
+	# Prevent overriding the parent project's compiler/linker
+	# settings on Windows
+	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+	# Add googletest directly to our build. This defines
+	# the gtest and gtest_main targets.
+	add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
+                 	  ${CMAKE_BINARY_DIR}/googletest-build
+                 	  EXCLUDE_FROM_ALL)
+
+	# The gtest/gtest_main targets carry header search path
+	# dependencies automatically when using CMake 2.8.11 or
+	# later. Otherwise we have to add them here ourselves.
+	if (CMAKE_VERSION VERSION_LESS 2.8.11)
+  	  include_directories("${gtest_SOURCE_DIR}/include")
+	endif()
+
+	# Now simply link against gtest or gtest_main as needed. Eg
+	add_executable(raii_test raii_socket/test/raii_socket_test.cpp)
+	target_include_directories(raii_test PUBLIC
+  	  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/googletest-src/googlemock/include/>
+  	  )
+	target_link_libraries(raii_test gtest_main)
+	target_link_libraries(raii_test raii_socket)
+	add_test(NAME example_test COMMAND raii_test)
+endif()
